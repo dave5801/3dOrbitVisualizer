@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Orbital Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <script>
+        // Create scene, camera, and renderer
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Load orbital data from Flask backend
+        fetch('/orbit-data')
+        .then(response => response.json())
+        .then(data => {
+            const points = [];
+            for (let i = 0; i < data.x.length; i++) {
+                points.push(new THREE.Vector3(data.x[i], data.y[i], data.z[i]));
+            }
+            const orbitGeometry = new THREE.BufferGeometry().setFromPoints(points);
+            const orbitMaterial = new THREE.LineBasicMaterial({ color: 0x00ff00 });
+            const orbitLine = new THREE.Line(orbitGeometry, orbitMaterial);
+            scene.add(orbitLine);
+        });
+
+        // Add central body
+        const centralGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+        const centralMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+        const centralBody = new THREE.Mesh(centralGeometry, centralMaterial);
+        scene.add(centralBody);
+
+        // Set camera position and animate
+        camera.position.z = 15;
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+</html>
