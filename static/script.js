@@ -18,6 +18,11 @@ const satelliteMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
 const satellite = new THREE.Mesh(satelliteGeometry, satelliteMaterial);
 scene.add(satellite);
 
+const satGeometry = new THREE.SphereGeometry(0.1, 16, 16);
+const satMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+const satelliteMesh = new THREE.Mesh(satGeometry, satMaterial);
+scene.add(satelliteMesh);
+
 // Fetch Orbit Data
 fetch('/orbit_data')
     .then(response => response.json())
@@ -41,6 +46,25 @@ fetch('/orbit_data')
         }
         animate();
     });
+
+async function updateSatellitePosition() {
+    const response = await fetch("/satellite_position");
+    const data = await response.json();
+        
+    // Convert lat/lon/alt to Three.js coordinates
+    let lat = data.latitude * (Math.PI / 180);
+    let lon = data.longitude * (Math.PI / 180);
+    let radius = 6371 + data.altitude; // Earth radius + altitude in km
+    
+    let x = radius * Math.cos(lat) * Math.cos(lon);
+    let y = radius * Math.sin(lat);
+    let z = radius * Math.cos(lat) * Math.sin(lon);
+        
+    satelliteMesh.position.set(x, y, z); // Move satellite in Three.js scene
+
+    }
+// Update every 5 seconds
+setInterval(updateSatellitePosition, 5000);
 
 // Position the camera
 camera.position.z = 3;
